@@ -1,6 +1,7 @@
 use std::collections::HashMap;
-use std::io::{BufRead, BufReader, Read};
+use std::io::{BufRead, BufReader, Read, Write};
 use std::net::{TcpListener, TcpStream};
+use std::fs;
 
 fn read_headers(reader: &mut BufReader<&TcpStream>) -> std::io::Result<HashMap<String,String>>{
     let mut lines: Vec<String>=Vec::new();
@@ -50,7 +51,35 @@ fn read_body(
     Ok(body)
 }
 
-fn handle_stream(stream: TcpStream)->std::io::Result<()>{
+fn write_response(
+    stream: &mut TcpStream,
+    status: u8,
+    reason: &str,
+    content_type: &str,
+    body: &[u8],
+    keep_alive: bool,
+) -> std::io::Result<()>{
+    let head = format!(
+        "HTTP/1.1 {} {}\r\nContent-Type: {}\r\nContent-Length: {}\r\nConnection: {}\r\n\r\n",
+        status,
+        reason,
+        content_type,
+        body.len(),
+        if keep_alive { "keep-alive" } else { "close" },
+    );
+    stream.write_all(head.as_bytes())?;
+    stream.write_all(body)?;
+    stream.flush()
+}
+
+fn read_file(file_path: &str) -> std::io::Result<String>{
+    match fs::read_to_string(file_path){
+        Ok(content)=> Ok(content),
+        Err(e)=> Err(std::io::Error::new(std::io::ErrorKind::InvalidData, format!("{e}"))),
+    }
+}
+
+fn handle_stream(mut stream: TcpStream)->std::io::Result<()>{
     let mut reader = BufReader::new(&stream);
 
     let (method,target,version)=read_request_line(&mut reader)?;
@@ -72,6 +101,11 @@ fn handle_stream(stream: TcpStream)->std::io::Result<()>{
         body=read_body(&mut reader,len)?;
     }
     println!("{body}");
+
+    if target=="/" && method=="GET" {
+        let Content=read_file("public/index.html")?;
+        let _ =write_response(&mut stream,200,"OK", "text/html", Content.as_bytes(), false)?;
+    }
 
     Ok(())
 }
