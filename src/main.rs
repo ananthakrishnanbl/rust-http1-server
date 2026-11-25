@@ -5,16 +5,11 @@ use std::fs;
 
 mod error;
 mod request;
+mod static_file;
 
+use static_file::{StaticServe, static_serve};
 use error::{Result};
 use request::{Request, read_request};
-
-// fn get_file_name(target: &str) -> String{
-//     match target{
-//         "/" => String::from("public/index.html"),
-//         other=> format!("public/{other}")
-//     }
-// }
 
 // fn write_response(
 //     stream: &mut TcpStream,
@@ -37,23 +32,15 @@ use request::{Request, read_request};
 //     stream.flush()
 // }
 
-// fn read_file(file_path: &str) -> std::io::Result<String>{
-//     match fs::read_to_string(file_path){
-//         Ok(content)=> Ok(content),
-//         Err(_)=> {
-//             match fs::read_to_string("public/404.html"){
-//                 Ok(content)=> Ok(content),
-//                 Err(e)=> Err(std::io::Error::new(std::io::ErrorKind::InvalidData, format!("{e}"))),
-//             }
-//         },
-//     }
-// }
 
 fn handle_stream(mut stream: TcpStream)->Result<()>{
     let mut reader = BufReader::new(&stream);
 
     let r: Request=read_request(&mut reader)?;
     println!("{:#?}",r);
+
+    let s:StaticServe=static_serve(&r.target)?;
+    println!("{:#?}",s);
 
     Ok(())
 }

@@ -1,7 +1,8 @@
 pub enum Error{
     Io(std::io::Error),
     RequestError(String),
-    Other(String)
+    Other(String),
+    Forbidden
 }
 
 impl std::fmt::Display for Error{
@@ -10,6 +11,7 @@ impl std::fmt::Display for Error{
             Error::Io(e)=> write!(f,"IO Error {}",e),
             Error::RequestError(e)=>write!(f,"Error in Request: {}",e),
             Error::Other(e)=>write!(f,"{}",e),
+            Error::Forbidden=>write!(f,"Forbidden"),
         }
     }
 }

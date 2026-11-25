@@ -5,11 +5,11 @@ use crate::error::{Error,Result};
 
 #[derive(Debug)]
 pub struct Request{
-    method: String,
-    target: String,
-    version: String,
-    headers: HashMap<String,String>,
-    body: String,
+    pub method: String,
+    pub target: String,
+    pub version: String,
+    pub headers: HashMap<String,String>,
+    pub body: String,
 }
 
 fn read_headers(reader: &mut BufReader<&TcpStream>) -> Result<HashMap<String,String>>{
