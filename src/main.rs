@@ -6,10 +6,12 @@ use std::fs;
 mod error;
 mod request;
 mod static_file;
+mod response;
 
 use static_file::{StaticServe, static_serve};
 use error::{Result};
 use request::{Request, read_request};
+use response::{Response, write_response};
 
 // fn write_response(
 //     stream: &mut TcpStream,
@@ -39,8 +41,16 @@ fn handle_stream(mut stream: TcpStream)->Result<()>{
     let r: Request=read_request(&mut reader)?;
     println!("{:#?}",r);
 
-    let s:StaticServe=static_serve(&r.target)?;
+    let s:StaticServe=static_serve(&r.target);
     println!("{:#?}",s);
+
+    let mut r: Response=s.into();
+    println!("{:#?}",r);
+
+    r.set_keep_alive(true);
+    println!("{:#?}",r);
+
+    let _ = write_response(&mut stream,r)?;
 
     Ok(())
 }
